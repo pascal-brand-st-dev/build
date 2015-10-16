@@ -80,6 +80,8 @@ busybox-cleaner: busybox-cleaner-common
 # Linux kernel
 ################################################################################
 $(LINUX_PATH)/.config:
+	sed -i '/config ARM$$/a select TEE' $(LINUX_PATH)/arch/arm/Kconfig;
+	sed -i '/config ARM$$/a select OPTEE' $(LINUX_PATH)/arch/arm/Kconfig;
 	$(MAKE) -C $(LINUX_PATH) ARCH=arm vexpress_defconfig
 
 linux-defconfig: $(LINUX_PATH)/.config
@@ -140,9 +142,9 @@ filelist-tee: xtest
 	@echo "# xtest / optee_test" > $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -type f -name "xtest" | sed 's/\(.*\)/file \/bin\/xtest \1 755 0 0/g' >> $(GEN_ROOTFS_FILELIST)
 	@echo "# TAs" >> $(GEN_ROOTFS_FILELIST)
-	@echo "dir /lib/optee_armtz 755 0 0" >> $(GEN_ROOTFS_FILELIST)
+	@echo "dir /lib/teetz 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -name "*.ta" | \
-		sed 's/\(.*\)\/\(.*\)/file \/lib\/optee_armtz\/\2 \1\/\2 444 0 0/g' >> $(GEN_ROOTFS_FILELIST)
+		sed 's/\(.*\)\/\(.*\)/file \/lib\/teetz\/\2 \1\/\2 444 0 0/g' >> $(GEN_ROOTFS_FILELIST)
 	@echo "# Secure storage dig" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /data 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /data/tee 755 0 0" >> $(GEN_ROOTFS_FILELIST)
@@ -171,8 +173,6 @@ define run-help
 	@echo attach a debugger and continue from there.
 	@echo
 	@echo To run xtest paste the following on the serial 0 prompt
-	@echo modprobe optee_armtz
-	@echo sleep 0.1
 	@echo tee-supplicant\&
 	@echo sleep 0.1
 	@echo xtest
