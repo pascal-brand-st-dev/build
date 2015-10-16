@@ -32,7 +32,7 @@ DEBUG = 1
 ################################################################################
 all: bios-qemu qemu soc-term
 all-clean: bios-qemu-clean busybox-clean linux-clean optee-os-clean \
-	optee-client-clean optee-linuxdriver-clean qemu-clean soc-term-clean \
+	optee-client-clean qemu-clean soc-term-clean \
 	check-clean
 
 -include toolchain.mk
@@ -80,8 +80,9 @@ busybox-cleaner: busybox-cleaner-common
 # Linux kernel
 ################################################################################
 $(LINUX_PATH)/.config:
-	# Temporary fix until we have the driver integrated in the kernel
-	sed -i '/config ARM$$/a select DMA_SHARED_BUFFER' $(LINUX_PATH)/arch/arm/Kconfig;
+	cd $(LINUX_PATH) && git checkout arch/arm/Kconfig
+	sed -i '/config ARM$$/a select TEE' $(LINUX_PATH)/arch/arm/Kconfig;
+	sed -i '/config ARM$$/a select OPTEE' $(LINUX_PATH)/arch/arm/Kconfig;
 	$(MAKE) -C $(LINUX_PATH) ARCH=arm vexpress_defconfig
 
 linux-defconfig: $(LINUX_PATH)/.config
@@ -113,12 +114,6 @@ optee-client: optee-client-common
 
 optee-client-clean: optee-client-clean-common
 
-OPTEE_LINUXDRIVER_COMMON_FLAGS += ARCH=arm
-optee-linuxdriver: optee-linuxdriver-common
-
-OPTEE_LINUXDRIVER_CLEAN_COMMON_FLAGS += ARCH=arm
-optee-linuxdriver-clean: optee-linuxdriver-clean-common
-
 ################################################################################
 # Soc-term
 ################################################################################
@@ -148,17 +143,15 @@ filelist-tee: xtest
 	@echo "# xtest / optee_test" > $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -type f -name "xtest" | sed 's/\(.*\)/file \/bin\/xtest \1 755 0 0/g' >> $(GEN_ROOTFS_FILELIST)
 	@echo "# TAs" >> $(GEN_ROOTFS_FILELIST)
-	@echo "dir /lib/optee_armtz 755 0 0" >> $(GEN_ROOTFS_FILELIST)
+	@echo "dir /lib/teetz 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -name "*.ta" | \
-		sed 's/\(.*\)\/\(.*\)/file \/lib\/optee_armtz\/\2 \1\/\2 444 0 0/g' >> $(GEN_ROOTFS_FILELIST)
+		sed 's/\(.*\)\/\(.*\)/file \/lib\/teetz\/\2 \1\/\2 444 0 0/g' >> $(GEN_ROOTFS_FILELIST)
 	@echo "# Secure storage dig" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /data 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /data/tee 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "# OP-TEE device" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /lib/modules 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /lib/modules/$(call KERNEL_VERSION) 755 0 0" >> $(GEN_ROOTFS_FILELIST)
-	@echo "file /lib/modules/$(call KERNEL_VERSION)/optee.ko $(OPTEE_LINUXDRIVER_PATH)/core/optee.ko 755 0 0" >> $(GEN_ROOTFS_FILELIST)
-	@echo "file /lib/modules/$(call KERNEL_VERSION)/optee_armtz.ko $(OPTEE_LINUXDRIVER_PATH)/armtz/optee_armtz.ko 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "# OP-TEE Client" >> $(GEN_ROOTFS_FILELIST)
 	@echo "file /bin/tee-supplicant $(OPTEE_CLIENT_EXPORT)/bin/tee-supplicant 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /lib/arm-linux-gnueabihf 755 0 0" >> $(GEN_ROOTFS_FILELIST)
@@ -166,7 +159,7 @@ filelist-tee: xtest
 	@echo "slink /lib/arm-linux-gnueabihf/libteec.so.1 libteec.so.1.0 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "slink /lib/arm-linux-gnueabihf/libteec.so libteec.so.1 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 
-update_rootfs: busybox optee-client optee-linuxdriver filelist-tee
+update_rootfs: busybox optee-client filelist-tee
 	cat $(GEN_ROOTFS_PATH)/filelist-final.txt $(GEN_ROOTFS_PATH)/filelist-tee.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
 	cd $(GEN_ROOTFS_PATH); \
 		$(LINUX_PATH)/usr/gen_init_cpio $(GEN_ROOTFS_PATH)/filelist.tmp | gzip > $(GEN_ROOTFS_PATH)/filesystem.cpio.gz
@@ -181,8 +174,6 @@ define run-help
 	@echo attach a debugger and continue from there.
 	@echo
 	@echo To run xtest paste the following on the serial 0 prompt
-	@echo modprobe optee_armtz
-	@echo sleep 0.1
 	@echo tee-supplicant\&
 	@echo sleep 0.1
 	@echo xtest
