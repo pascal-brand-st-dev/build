@@ -127,13 +127,11 @@ optee-client-clean-common:
 OPTEE_LINUXDRIVER_COMMON_FLAGS ?= CROSS_COMPILE=$(CROSS_COMPILE_NS_KERNEL) \
 	LOCALVERSION= M=$(OPTEE_LINUXDRIVER_PATH)
 
-optee-linuxdriver-common: linux
-	$(MAKE) -C $(LINUX_PATH) $(OPTEE_LINUXDRIVER_COMMON_FLAGS) modules
+optee-linuxdriver-common:
 
 OPTEE_LINUXDRIVER_CLEAN_COMMON_FLAGS ?= $(OPTEE_LINUXDRIVER_COMMON_FLAGS)
 
 optee-linuxdriver-clean-common:
-	$(MAKE) -C $(LINUX_PATH) $(OPTEE_LINUXDRIVER_CLEAN_COMMON_FLAGS) clean
 
 ################################################################################
 # xtest / optee_test
