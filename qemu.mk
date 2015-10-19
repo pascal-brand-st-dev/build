@@ -80,8 +80,10 @@ busybox-cleaner: busybox-cleaner-common
 # Linux kernel
 ################################################################################
 $(LINUX_PATH)/.config:
+	cd $(LINUX_PATH) && git checkout arch/arm/Kconfig
 	sed -i '/config ARM$$/a select TEE' $(LINUX_PATH)/arch/arm/Kconfig;
 	sed -i '/config ARM$$/a select OPTEE' $(LINUX_PATH)/arch/arm/Kconfig;
+	#git checkout $(LINUX_PATH)/arch/arm/boot/dts
 	$(MAKE) -C $(LINUX_PATH) ARCH=arm vexpress_defconfig
 
 linux-defconfig: $(LINUX_PATH)/.config

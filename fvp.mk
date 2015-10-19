@@ -28,9 +28,9 @@ endif
 ################################################################################
 # Targets
 ################################################################################
-all: arm-tf edk2 linux optee-os optee-client optee-linuxdriver generate-dtb xtest
+all: arm-tf edk2 linux optee-os optee-client generate-dtb xtest
 all-clean: arm-tf-clean busybox-clean edk2-clean optee-os-clean \
-	optee-client-clean optee-linuxdriver-clean
+	optee-client-clean
 
 
 -include toolchain.mk
@@ -90,8 +90,10 @@ edk2-clean: edk2-clean-common
 # Linux kernel
 ################################################################################
 $(LINUX_PATH)/.config:
-	# Temporary fix until we have the driver integrated in the kernel
-	sed -i '/config ARM64$$/a select DMA_SHARED_BUFFER' $(LINUX_PATH)/arch/arm64/Kconfig;
+	cd $(LINUX_PATH) && git checkout arch/arm64/Kconfig
+	sed -i '/config ARM$$/a select TEE' $(LINUX_PATH)/arch/arm64/Kconfig;
+	sed -i '/config ARM$$/a select OPTEE' $(LINUX_PATH)/arch/arm64/Kconfig;
+	#git checkout $(LINUX_PATH)/arch/arm/boot/dts
 	make -C $(LINUX_PATH) ARCH=arm64 defconfig
 
 linux-defconfig: $(LINUX_PATH)/.config
@@ -122,12 +124,6 @@ optee-os-clean: optee-os-clean-common
 optee-client: optee-client-common
 
 optee-client-clean: optee-client-clean-common
-
-OPTEE_LINUXDRIVER_COMMON_FLAGS += ARCH=arm64
-optee-linuxdriver: optee-linuxdriver-common
-
-OPTEE_LINUXDRIVER_CLEAN_COMMON_FLAGS += ARCH=arm64
-optee-linuxdriver-clean: optee-linuxdriver-clean-common
 
 generate-dtb: linux
 	$(LINUX_PATH)/scripts/dtc/dtc \
