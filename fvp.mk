@@ -91,8 +91,8 @@ edk2-clean: edk2-clean-common
 ################################################################################
 $(LINUX_PATH)/.config:
 	cd $(LINUX_PATH) && git checkout arch/arm64/Kconfig
-	sed -i '/config ARM$$/a select TEE' $(LINUX_PATH)/arch/arm64/Kconfig;
-	sed -i '/config ARM$$/a select OPTEE' $(LINUX_PATH)/arch/arm64/Kconfig;
+	sed -i '/config ARM64$$/a select TEE' $(LINUX_PATH)/arch/arm64/Kconfig;
+	sed -i '/config ARM64$$/a select OPTEE' $(LINUX_PATH)/arch/arm64/Kconfig;
 	#git checkout $(LINUX_PATH)/arch/arm/boot/dts
 	make -C $(LINUX_PATH) ARCH=arm64 defconfig
 
@@ -130,7 +130,7 @@ generate-dtb: linux
 		-O dtb \
 		-o $(FOUNDATION_PATH)/fdt.dtb \
 		-b 0 \
-		-i . $(OPTEE_LINUXDRIVER_PATH)/fdts/fvp-foundation-gicv2-psci.dts
+		-i . fvp-foundation-gicv2-psci.dts
 
 ################################################################################
 # xtest / optee_test
@@ -170,7 +170,7 @@ filelist-tee:
 	@echo "slink /lib/aarch64-linux-gnu/libteec.so.1 libteec.so.1.0 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "slink /lib/aarch64-linux-gnu/libteec.so libteec.so.1 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 
-update_rootfs: busybox optee-client optee-linuxdriver xtest filelist-tee
+update_rootfs: busybox optee-client xtest filelist-tee
 	cat $(GEN_ROOTFS_PATH)/filelist-final.txt $(GEN_ROOTFS_PATH)/filelist-tee.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
 	cd $(GEN_ROOTFS_PATH); \
 	        $(LINUX_PATH)/usr/gen_init_cpio $(GEN_ROOTFS_PATH)/filelist.tmp | gzip > $(GEN_ROOTFS_PATH)/filesystem.cpio.gz
