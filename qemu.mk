@@ -80,10 +80,12 @@ busybox-cleaner: busybox-cleaner-common
 # Linux kernel
 ################################################################################
 $(LINUX_PATH)/.config:
-	cd $(LINUX_PATH) && git checkout arch/arm/Kconfig
+	cd $(LINUX_PATH) && git checkout arch/arm/Kconfig $(LINUX_PATH)/arch/arm/boot/dts
 	sed -i '/config ARM$$/a select TEE' $(LINUX_PATH)/arch/arm/Kconfig;
 	sed -i '/config ARM$$/a select OPTEE' $(LINUX_PATH)/arch/arm/Kconfig;
-	#git checkout $(LINUX_PATH)/arch/arm/boot/dts
+	#sed -i '/config ARM$$/a select ARM_APPENDED_DTB' $(LINUX_PATH)/arch/arm/Kconfig;
+	#sed -i '/config ARM$$/a select ARM_ATAG_DTB_COMPAT' $(LINUX_PATH)/arch/arm/Kconfig;
+	#echo "optee { compatible = "optee,optee-tz"; };" >> vexpress-v2m-rs1.dtsi
 	$(MAKE) -C $(LINUX_PATH) ARCH=arm vexpress_defconfig
 
 linux-defconfig: $(LINUX_PATH)/.config
