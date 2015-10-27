@@ -28,9 +28,9 @@ endif
 ################################################################################
 # Targets
 ################################################################################
-all: arm-tf edk2 linux optee-os optee-client optee-linuxdriver generate-dtb xtest
+all: arm-tf edk2 linux optee-os optee-client generate-dtb xtest update_rootfs
 all-clean: arm-tf-clean busybox-clean edk2-clean optee-os-clean \
-	optee-client-clean optee-linuxdriver-clean
+	optee-client-clean
 
 
 -include toolchain.mk
@@ -91,14 +91,20 @@ edk2-clean: edk2-clean-common
 ################################################################################
 $(LINUX_PATH)/.config:
 	# Temporary fix until we have the driver integrated in the kernel
-	sed -i '/config ARM64$$/a select DMA_SHARED_BUFFER' $(LINUX_PATH)/arch/arm64/Kconfig;
+	cd $(LINUX_PATH) && git checkout arch/arm64/Kconfig usr/Kconfig
+	sed -i '/config ARM64$$/a select TEE' $(LINUX_PATH)/arch/arm64/Kconfig;
+	sed -i '/config ARM64$$/a select OPTEE' $(LINUX_PATH)/arch/arm64/Kconfig;
+	# set INITRAMFS_SOURCE
+	sed -i 's/default ""/default "\/home\/brand\/devel\/optee_fvp_gendrv\/gen_rootfs\/filesystem.cpio.gz"/g' $(LINUX_PATH)/usr/Kconfig;
 	make -C $(LINUX_PATH) ARCH=arm64 defconfig
 
 linux-defconfig: $(LINUX_PATH)/.config
 
 LINUX_COMMON_FLAGS += ARCH=arm64
 
-linux: linux-common
+#Force linux recompilation to update the rootfs
+linux: update_rootfs
+	$(MAKE) linux-common
 
 linux-defconfig-clean: linux-defconfig-clean-common
 
@@ -123,18 +129,12 @@ optee-client: optee-client-common
 
 optee-client-clean: optee-client-clean-common
 
-OPTEE_LINUXDRIVER_COMMON_FLAGS += ARCH=arm64
-optee-linuxdriver: optee-linuxdriver-common
-
-OPTEE_LINUXDRIVER_CLEAN_COMMON_FLAGS += ARCH=arm64
-optee-linuxdriver-clean: optee-linuxdriver-clean-common
-
 generate-dtb: linux
 	$(LINUX_PATH)/scripts/dtc/dtc \
 		-O dtb \
 		-o $(FOUNDATION_PATH)/fdt.dtb \
 		-b 0 \
-		-i . $(OPTEE_LINUXDRIVER_PATH)/fdts/fvp-foundation-gicv2-psci.dts
+		-i . $(LINUX_PATH)/arch/arm64/boot/dts/arm/foundation-v8.dts
 
 ################################################################################
 # xtest / optee_test
@@ -149,21 +149,19 @@ xtest-patch: xtest-patch-common
 # Root FS
 ################################################################################
 .PHONY: filelist-tee
-filelist-tee:
+filelist-tee: optee-client xtest
 	@echo "# xtest / optee_test" > $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -type f -name "xtest" | sed 's/\(.*\)/file \/bin\/xtest \1 755 0 0/g' >> $(GEN_ROOTFS_FILELIST)
 	@echo "# TAs" >> $(GEN_ROOTFS_FILELIST)
-	@echo "dir /lib/optee_armtz 755 0 0" >> $(GEN_ROOTFS_FILELIST)
+	@echo "dir /lib/teetz 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -name "*.ta" | \
-		sed 's/\(.*\)\/\(.*\)/file \/lib\/optee_armtz\/\2 \1\/\2 444 0 0/g' >> $(GEN_ROOTFS_FILELIST)
+		sed 's/\(.*\)\/\(.*\)/file \/lib\/teetz\/\2 \1\/\2 444 0 0/g' >> $(GEN_ROOTFS_FILELIST)
 	@echo "# Secure storage dig" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /data 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /data/tee 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "# OP-TEE device" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /lib/modules 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /lib/modules/$(call KERNEL_VERSION) 755 0 0" >> $(GEN_ROOTFS_FILELIST)
-	@echo "file /lib/modules/$(call KERNEL_VERSION)/optee.ko $(OPTEE_LINUXDRIVER_PATH)/core/optee.ko 755 0 0" >> $(GEN_ROOTFS_FILELIST)
-	@echo "file /lib/modules/$(call KERNEL_VERSION)/optee_armtz.ko $(OPTEE_LINUXDRIVER_PATH)/armtz/optee_armtz.ko 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "# OP-TEE Client" >> $(GEN_ROOTFS_FILELIST)
 	@echo "file /bin/tee-supplicant $(OPTEE_CLIENT_EXPORT)/bin/tee-supplicant 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /lib/aarch64-linux-gnu 755 0 0" >> $(GEN_ROOTFS_FILELIST)
@@ -171,17 +169,15 @@ filelist-tee:
 	@echo "slink /lib/aarch64-linux-gnu/libteec.so.1 libteec.so.1.0 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "slink /lib/aarch64-linux-gnu/libteec.so libteec.so.1 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 
-update_rootfs: busybox optee-client optee-linuxdriver xtest filelist-tee
+update_rootfs: busybox filelist-tee
 	cat $(GEN_ROOTFS_PATH)/filelist-final.txt $(GEN_ROOTFS_PATH)/filelist-tee.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
-	cd $(GEN_ROOTFS_PATH); \
+	cd $(GEN_ROOTFS_PATH) && \
 	        $(LINUX_PATH)/usr/gen_init_cpio $(GEN_ROOTFS_PATH)/filelist.tmp | gzip > $(GEN_ROOTFS_PATH)/filesystem.cpio.gz
 
 ################################################################################
 # Run targets
 ################################################################################
-# This target enforces updating root fs etc
 run: all
-	$(MAKE) update_rootfs
 	$(MAKE) run-only
 
 run-only:
