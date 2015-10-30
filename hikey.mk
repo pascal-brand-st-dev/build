@@ -231,7 +231,7 @@ strace-cleaner:
 # Root FS
 ################################################################################
 .PHONY: filelist-tee
-filelist-tee: xtest strace
+lfilelist-tee: optee-client optee-linuxdriver xtest strace
 	@if [ ! -f "$(USBNETSH_PATH)" ]; then \
 		echo "#!/bin/sh" > $(USBNETSH_PATH); \
 		echo "#" >> $(USBNETSH_PATH); \
@@ -288,7 +288,7 @@ filelist-tee: xtest strace
 	@echo "# strace tool" >> $(GEN_ROOTFS_FILELIST)
 	@echo "file /bin/strace $(STRACE_PATH)/strace 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 
-update_rootfs: busybox optee-client optee-linuxdriver filelist-tee linux-gen_init_cpio
+update_rootfs: busybox filelist-tee linux-gen_init_cpio
 	cat $(GEN_ROOTFS_PATH)/filelist-final.txt | sed '/fbtest/d' > $(GEN_ROOTFS_PATH)/filelist-all.txt
 	cat $(GEN_ROOTFS_PATH)/filelist-all.txt $(GEN_ROOTFS_PATH)/filelist-tee.txt > $(GEN_ROOTFS_PATH)/filelist.tmp
 	cd $(GEN_ROOTFS_PATH); \
