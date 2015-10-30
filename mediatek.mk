@@ -69,6 +69,10 @@ LINUX_CLEANER_COMMON_FLAGS += ARCH=arm64
 
 linux-cleaner: linux-cleaner-common
 
+LINUX_GEN_INIT_CPIO_COMMON_FLAGS += ARCH=arm64
+
+linux-gen_init_cpio: linux-gen_init_cpio-common
+
 ################################################################################
 # OP-TEE
 ################################################################################
@@ -92,7 +96,9 @@ optee-linuxdriver-clean: optee-linuxdriver-clean-common
 # xtest / optee_test
 ################################################################################
 xtest: xtest-common
+
 xtest-clean: xtest-clean-common
+
 xtest-patch: xtest-patch-common
 
 ################################################################################

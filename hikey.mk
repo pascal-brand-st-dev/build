@@ -147,12 +147,9 @@ $(LINUX_PATH)/.config:
 
 linux-defconfig: $(LINUX_PATH)/.config
 
-linux-gen_init_cpio: linux-defconfig
-	make -C $(LINUX_PATH)/usr \
-		CROSS_COMPILE=$(CROSS_COMPILE_NS_KERNEL) \
-		ARCH=arm64 \
-		LOCALVERSION= \
-		gen_init_cpio
+LINUX_GEN_INIT_CPIO_COMMON_FLAGS += ARCH=arm64
+
+linux-gen_init_cpio: linux-gen_init_cpio-common
 
 LINUX_COMMON_FLAGS += ARCH=arm64 Image modules dtbs
 

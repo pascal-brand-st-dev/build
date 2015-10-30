@@ -100,6 +100,10 @@ LINUX_CLEANER_COMMON_FLAGS += ARCH=arm
 
 linux-cleaner: linux-cleaner-common
 
+LINUX_GEN_INIT_CPIO_COMMON_FLAGS += ARCH=arm
+
+linux-gen_init_cpio: linux-gen_init_cpio-common
+
 ################################################################################
 # OP-TEE
 ################################################################################

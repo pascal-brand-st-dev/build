@@ -46,7 +46,7 @@ BUSYBOX_COMMON_TARGET		?= TOBEDEFINED
 BUSYBOX_CLEAN_COMMON_TARGET	?= TOBEDEFINED
 BUSYBOX_COMMON_CCDIR		?= TOBEDEFINED
 
-busybox-common: linux
+busybox-common: linux-gen_init_cpio
 	cd $(GEN_ROOTFS_PATH) &&  \
 		CC_DIR=$(BUSYBOX_COMMON_CCDIR) \
 		PATH=${PATH}:$(LINUX_PATH)/usr \
@@ -82,6 +82,12 @@ LINUX_CLEANER_COMMON_FLAGS ?= $(LINUX_COMMON_FLAGS)
 
 linux-cleaner-common: linux-defconfig-clean
 	$(MAKE) -C $(LINUX_PATH) $(LINUX_CLEAN_COMMON_FLAGS) distclean
+
+LINUX_GEN_INIT_CPIO_COMMON_FLAGS ?= $(LINUX_COMMON_FLAGS)
+
+linux-gen_init_cpio-common: linux-defconfig
+	$(MAKE) -C $(LINUX_PATH)/usr gen_init_cpio
+
 
 ################################################################################
 # EDK2 / Tianocore
