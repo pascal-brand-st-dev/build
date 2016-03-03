@@ -61,7 +61,6 @@ arm-tf-clean:
 ################################################################################
 BUSYBOX_COMMON_TARGET = fvp-aarch64
 BUSYBOX_CLEAN_COMMON_TARGET = fvp-aarch64 clean
-BUSYBOX_COMMON_CCDIR = $(AARCH64_PATH)
 
 busybox: busybox-common
 

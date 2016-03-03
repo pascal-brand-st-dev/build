@@ -1,16 +1,16 @@
+################################################################################
+# Following variables defines how the NS_USER (Non Secure User - Client
+# Application), NS_KERNEL (Non Secure Kernel), S_KERNEL (Secure Kernel) and
+# S_USER (Secure User - TA) are compiled
+################################################################################
+COMPILE_NS_USER   := 64
+COMPILE_NS_KERNEL := 64
+COMPILE_S_USER    := 64
+COMPILE_S_KERNEL  := 64
+
 DEBUG ?= 0
 
 -include common.mk
-
-################################################################################
-# Mandatory definition to use common.mk
-################################################################################
-CROSS_COMPILE_NS_USER	?= "$(CCACHE)$(AARCH64_CROSS_COMPILE)"
-CROSS_COMPILE_NS_KERNEL	?= "$(CCACHE)$(AARCH64_CROSS_COMPILE)"
-CROSS_COMPILE_S_USER	?= "$(CCACHE)$(AARCH64_CROSS_COMPILE)"
-CROSS_COMPILE_S_KERNEL	?= "$(CCACHE)$(AARCH64_CROSS_COMPILE)"
-OPTEE_OS_BIN		?= $(OPTEE_OS_PATH)/out/arm-plat-vexpress/core/tee.bin
-OPTEE_OS_TA_DEV_KIT_DIR	?= $(OPTEE_OS_PATH)/out/arm-plat-vexpress/export-ta_arm64
 
 ################################################################################
 # Paths to git projects and various binaries
@@ -57,7 +57,6 @@ arm-tf-clean:
 ################################################################################
 BUSYBOX_COMMON_TARGET = fvp-aarch64
 BUSYBOX_CLEAN_COMMON_TARGET = fvp-aarch64 clean
-BUSYBOX_COMMON_CCDIR = $(AARCH64_PATH)
 
 busybox: busybox-common
 
@@ -111,7 +110,7 @@ linux-cleaner: linux-cleaner-common
 ################################################################################
 # OP-TEE
 ################################################################################
-OPTEE_OS_COMMON_FLAGS += PLATFORM=vexpress-juno CFG_ARM64_core=y
+OPTEE_OS_COMMON_FLAGS += PLATFORM=vexpress-juno
 optee-os: optee-os-common
 
 OPTEE_OS_CLEAN_COMMON_FLAGS += PLATFORM=vexpress-juno
