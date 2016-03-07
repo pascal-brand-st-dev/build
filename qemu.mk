@@ -3,11 +3,10 @@
 # Application), NS_KERNEL (Non Secure Kernel), S_KERNEL (Secure Kernel) and
 # S_USER (Secure User - TA) are compiled
 ################################################################################
-
-COMPILE_NS_USER   := 32
-COMPILE_NS_KERNEL := 32
-COMPILE_S_USER    := 32
-COMPILE_S_KERNEL  := 32
+override COMPILE_NS_USER   := 32
+override COMPILE_NS_KERNEL := 32
+override COMPILE_S_USER    := 32
+override COMPILE_S_KERNEL  := 32
 
 -include common.mk
 
