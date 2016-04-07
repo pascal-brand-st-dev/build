@@ -173,3 +173,11 @@ XTEST_PATCH_COMMON_FLAGS ?= $(XTEST_COMMON_FLAGS)
 
 xtest-patch-common:
 	$(MAKE) -C $(OPTEE_TEST_PATH) $(XTEST_PATCH_COMMON_FLAGS) patch
+
+smaf-common:
+	cd $(ROOT)/libsmaf && \
+	autoreconf -vfi && \
+	./configure && \
+	$(MAKE)
+
+

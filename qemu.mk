@@ -30,7 +30,7 @@ DEBUG = 1
 ################################################################################
 # Targets
 ################################################################################
-all: bios-qemu qemu soc-term
+all: bios-qemu qemu soc-term smaf
 all-clean: bios-qemu-clean busybox-clean linux-clean optee-os-clean \
 	optee-client-clean optee-linuxdriver-clean qemu-clean soc-term-clean \
 	check-clean
@@ -144,7 +144,7 @@ xtest-patch: xtest-patch-common
 # Root FS
 ################################################################################
 .PHONY: filelist-tee
-filelist-tee: xtest
+filelist-tee: xtest smaf
 	@echo "# xtest / optee_test" > $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -type f -name "xtest" | sed 's/\(.*\)/file \/bin\/xtest \1 755 0 0/g' >> $(GEN_ROOTFS_FILELIST)
 	@echo "# TAs" >> $(GEN_ROOTFS_FILELIST)
@@ -161,6 +161,7 @@ filelist-tee: xtest
 	@echo "file /lib/modules/$(call KERNEL_VERSION)/optee_armtz.ko $(OPTEE_LINUXDRIVER_PATH)/armtz/optee_armtz.ko 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "# OP-TEE Client" >> $(GEN_ROOTFS_FILELIST)
 	@echo "file /bin/tee-supplicant $(OPTEE_CLIENT_EXPORT)/bin/tee-supplicant 755 0 0" >> $(GEN_ROOTFS_FILELIST)
+	@echo "file /bin/test_smaf $(ROOT)/libsmaf/tests/test_smaf 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /lib/arm-linux-gnueabihf 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "file /lib/arm-linux-gnueabihf/libteec.so.1.0 $(OPTEE_CLIENT_EXPORT)/lib/libteec.so.1.0 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "slink /lib/arm-linux-gnueabihf/libteec.so.1 libteec.so.1.0 755 0 0" >> $(GEN_ROOTFS_FILELIST)
@@ -218,6 +219,11 @@ run-only:
 		-m 1057 \
 		-bios $(ROOT)/out/bios-qemu/bios.bin $(QEMU_EXTRA_ARGS)
 
+smaf:
+	cd $(ROOT)/libsmaf && \
+	autoreconf -vfi && \
+	./configure --host=arm-linux-gnueabihf --build=arm-linux-gnueabihf && \
+	$(MAKE)
 
 ifneq ($(filter check,$(MAKECMDGOALS)),)
 CHECK_DEPS := all
