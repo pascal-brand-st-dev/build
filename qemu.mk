@@ -122,21 +122,11 @@ xtest-clean: xtest-clean-common
 
 xtest-patch: xtest-patch-common
 
-libsmaf-clean:
-	$(MAKE) -C $(ROOT)/libsmaf clean
-
-libsmaf:
-	cd $(ROOT)/libsmaf && \
-	autoreconf -vfi && \
-	export PATH=$(CROSS_COMPILE_NS_USER):$(PATH) && \
-	./configure --host=arm-linux-gnueabihf && \
-	$(MAKE)
-
 ################################################################################
 # Root FS
 ################################################################################
 .PHONY: filelist-tee
-filelist-tee: xtest libsmaf
+filelist-tee: xtest
 	@echo "# xtest / optee_test" > $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -type f -name "xtest" | sed 's/\(.*\)/file \/bin\/xtest \1 755 0 0/g' >> $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -type f -name "smaf" | sed 's/\(.*\)/file \/bin\/smaf \1 755 0 0/g' >> $(GEN_ROOTFS_FILELIST)
@@ -153,7 +143,6 @@ filelist-tee: xtest libsmaf
 	@echo "file /lib/modules/$(call KERNEL_VERSION)/optee.ko $(LINUX_PATH)/drivers/tee/optee/optee.ko 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "# OP-TEE Client" >> $(GEN_ROOTFS_FILELIST)
 	@echo "file /bin/tee-supplicant $(OPTEE_CLIENT_EXPORT)/bin/tee-supplicant 755 0 0" >> $(GEN_ROOTFS_FILELIST)
-	@echo "file /bin/test_smaf $(ROOT)/libsmaf/tests/test_smaf 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /lib/arm-linux-gnueabihf 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "file /lib/arm-linux-gnueabihf/libteec.so.1.0 $(OPTEE_CLIENT_EXPORT)/lib/libteec.so.1.0 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@echo "slink /lib/arm-linux-gnueabihf/libteec.so.1 libteec.so.1.0 755 0 0" >> $(GEN_ROOTFS_FILELIST)
