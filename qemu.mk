@@ -139,6 +139,7 @@ libsmaf:
 filelist-tee: xtest libsmaf
 	@echo "# xtest / optee_test" > $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -type f -name "xtest" | sed 's/\(.*\)/file \/bin\/xtest \1 755 0 0/g' >> $(GEN_ROOTFS_FILELIST)
+	@find $(OPTEE_TEST_OUT_PATH) -type f -name "smaf" | sed 's/\(.*\)/file \/bin\/smaf \1 755 0 0/g' >> $(GEN_ROOTFS_FILELIST)
 	@echo "# TAs" >> $(GEN_ROOTFS_FILELIST)
 	@echo "dir /lib/optee_armtz 755 0 0" >> $(GEN_ROOTFS_FILELIST)
 	@find $(OPTEE_TEST_OUT_PATH) -name "*.ta" | \
